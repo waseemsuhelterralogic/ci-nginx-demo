@@ -8,11 +8,6 @@ pipeline {
 
     stages {
 
-        stage('Checkout') {
-            steps {
-                git 'https://github.com/waseemsuhelterralogic/ci-nginx-demo.git'
-            }
-        }
 
         stage('Build Image') {
             steps {
