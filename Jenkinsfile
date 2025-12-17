@@ -4,10 +4,10 @@ pipeline {
     environment {
         DOCKERHUB_USER = '<your-dockerhub-username>'
         KUBE_NAMESPACE = 'ci-demo'
+        K8S_TOKEN = 'eyJhbGciOiJSUzI1NiIsImtpZCI6IlNSN1ZvM3UtSEFRYTRjT2lobFQxblR6V21uNks4dnd3ZU5YMVFBSVlaOWsifQ.eyJhdWQiOlsiaHR0cHM6Ly9rdWJlcm5ldGVzLmRlZmF1bHQuc3ZjLmNsdXN0ZXIubG9jYWwiLCJya2UyIl0sImV4cCI6MTc2NTk3NDU1NCwiaWF0IjoxNzY1OTcwOTU0LCJpc3MiOiJodHRwczovL2t1YmVybmV0ZXMuZGVmYXVsdC5zdmMuY2x1c3Rlci5sb2NhbCIsImp0aSI6ImUzMWIyODMyLTg2OTctNDg0Mi04NmQ3LThkNzE0OGVhZTljNyIsImt1YmVybmV0ZXMuaW8iOnsibmFtZXNwYWNlIjoiY2ktZGVtbyIsInNlcnZpY2VhY2NvdW50Ijp7Im5hbWUiOiJqZW5raW5zLXNhIiwidWlkIjoiZDdjZTRlMDktZGRkNS00ZjYyLTg2OWEtODMyZTM0NjczOGUyIn19LCJuYmYiOjE3NjU5NzA5NTQsInN1YiI6InN5c3RlbTpzZXJ2aWNlYWNjb3VudDpjaS1kZW1vOmplbmtpbnMtc2EifQ.h2_hCw56WdDWHrU3gL4BAVMrC5tUzzDk73RD2x1nndPV2e13ktmMVJ3iYI23kVrROpS1t3rdZfPmh3O1WcqitUfuEH2dvqiwsmWvuSq1brAMdbqbSAdkRTcsoPz1ou1QIUt_KYRLa8GxLAYmrhxV5uiGSKRY9N2Lv3OMU0UbX5-5AZTdjWK9O26SCNPR3KjfGrf-NtkZrKNRj2fKPSev09aRvfeClWEpKaxYzy2RJRWJ5785WdWyYuBRVUgb5Iy0LiSqfnAC_-av35ZK5wzOOCgI2qHHkcpfMCUU1ObFqG7pWNjiU5bduSsM7fiSK8VVmv2K_GR7PAKyJQUvTDRUFA'
     }
 
     stages {
-
 
         stage('Build Image') {
             steps {
@@ -19,7 +19,7 @@ pipeline {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DH_USER', passwordVariable: 'DH_PASS')]) {
                     sh '''
-                        podman login docker.io -u $DH_USER -p $DH_PASS
+                        echo $DH_PASS | podman login docker.io -u $DH_USER --password-stdin
                         podman tag ci-nginx-demo:latest docker.io/$DH_USER/ci-nginx-demo:latest
                         podman push docker.io/$DH_USER/ci-nginx-demo:latest
                     '''
@@ -29,16 +29,15 @@ pipeline {
 
         stage('Create Namespace') {
             steps {
-                sh "kubectl create namespace ${KUBE_NAMESPACE} --dry-run=client -o yaml | kubectl apply -f -"
+                sh "kubectl --server=https://localhost:16443 --token=$K8S_TOKEN create namespace ${KUBE_NAMESPACE} --dry-run=client -o yaml | kubectl --server=https://localhost:16443 --token=$K8S_TOKEN apply -f -"
             }
         }
 
         stage('Deploy to Kubernetes') {
             steps {
                 sh '''
-                    export PATH=$PATH:/var/lib/rancher/rke2/bin
-                    kubectl apply -f nginx-deployment.yaml -n ${KUBE_NAMESPACE}
-                    kubectl apply -f nginx-service.yaml -n ${KUBE_NAMESPACE}
+                    kubectl --server=https://localhost:16443 --token=$K8S_TOKEN apply -f /home/jenkins-agent/workspace/ci-nginx-demo/nginx-deployment.yaml -n ${KUBE_NAMESPACE}
+                    kubectl --server=https://localhost:16443 --token=$K8S_TOKEN apply -f /home/jenkins-agent/workspace/ci-nginx-demo/nginx-service.yaml -n ${KUBE_NAMESPACE}
                 '''
             }
         }
