@@ -49,12 +49,12 @@ pipeline {
                     kubectl --server=$K8S_SERVER \
                     --token=$K8S_TOKEN \
                     --insecure-skip-tls-verify \
-                    apply -f /home/jenkins-agent/workspace/ci-nginx-demo/nginx-deployment.yaml -n ci-demo
+                    apply -f /home/jenkins-agent/ci-nginx-demo/nginx-deployment.yaml -n ci-demo
 
                     kubectl --server=$K8S_SERVER \
                     --token=$K8S_TOKEN \
                     --insecure-skip-tls-verify \
-                    apply -f /home/jenkins-agent/workspace/ci-nginx-demo/nginx-service.yaml -n ci-demo
+                    apply -f /home/jenkins-agent/ci-nginx-demo/nginx-service.yaml -n ci-demo
                 '''
             }
         }
