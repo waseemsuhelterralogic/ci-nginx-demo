@@ -46,15 +46,15 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 sh '''
-                kubectl --server=$K8S_SERVER \
-                --token=$K8S_TOKEN \
-                --insecure-skip-tls-verify \
-                apply --validate=false -f nginx-deployment.yaml -n $KUBE_NAMESPACE
+                    kubectl --server=$K8S_SERVER \
+                    --token=$K8S_TOKEN \
+                    --insecure-skip-tls-verify \
+                    apply -f /home/jenkins-agent/workspace/ci-nginx-demo/nginx-deployment.yaml -n ci-demo
 
-                kubectl --server=$K8S_SERVER \
-                --token=$K8S_TOKEN \
-                --insecure-skip-tls-verify \
-                apply --validate=false -f nginx-service.yaml -n $KUBE_NAMESPACE
+                    kubectl --server=$K8S_SERVER \
+                    --token=$K8S_TOKEN \
+                    --insecure-skip-tls-verify \
+                    apply -f /home/jenkins-agent/workspace/ci-nginx-demo/nginx-service.yaml -n ci-demo
                 '''
             }
         }
