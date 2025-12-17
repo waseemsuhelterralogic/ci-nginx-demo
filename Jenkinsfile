@@ -29,15 +29,15 @@ pipeline {
 
         stage('Create Namespace') {
             steps {
-                sh "kubectl --server=https://localhost:16443 --token=$K8S_TOKEN create namespace ${KUBE_NAMESPACE} --dry-run=client -o yaml | kubectl --server=https://localhost:16443 --token=$K8S_TOKEN apply -f -"
+                sh "kubectl --server=https://localhost:16443 --token=$K8S_TOKEN --insecure-skip-tls-verify create namespace ${KUBE_NAMESPACE} --dry-run=client -o yaml | kubectl --server=https://localhost:16443 --token=$K8S_TOKEN --insecure-skip-tls-verify apply -f -"
             }
         }
 
         stage('Deploy to Kubernetes') {
             steps {
                 sh '''
-                    kubectl --server=https://localhost:16443 --token=$K8S_TOKEN apply -f /home/jenkins-agent/workspace/ci-nginx-demo/nginx-deployment.yaml -n ${KUBE_NAMESPACE}
-                    kubectl --server=https://localhost:16443 --token=$K8S_TOKEN apply -f /home/jenkins-agent/workspace/ci-nginx-demo/nginx-service.yaml -n ${KUBE_NAMESPACE}
+                    kubectl --server=https://localhost:16443 --token=$K8S_TOKEN --insecure-skip-tls-verify apply -f /home/jenkins-agent/workspace/ci-nginx-demo/nginx-deployment.yaml -n ${KUBE_NAMESPACE}
+                    kubectl --server=https://localhost:16443 --token=$K8S_TOKEN --insecure-skip-tls-verify apply -f /home/jenkins-agent/workspace/ci-nginx-demo/nginx-service.yaml -n ${KUBE_NAMESPACE}
                 '''
             }
         }
