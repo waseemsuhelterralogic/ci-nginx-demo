@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: ci-nginx-demo
-        image: docker.io/waseemsuhelterralogic/ci-nginx-demo:1.0
+        image: docker.io/waseemsuhelterralogic/ci-nginx-demo:IMAGE_TAG
         ports:
         - containerPort: 80
 

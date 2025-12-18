@@ -12,7 +12,9 @@ pipeline {
 
         stage('Build Image') {
             steps {
-                sh 'podman build -t ci-nginx-demo:latest .'
+                sh '''
+                podman build -t ci-nginx-demo:${BUILD_NUMBER} .
+                '''
             }
         }
 
@@ -20,9 +22,9 @@ pipeline {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DH_USER', passwordVariable: 'DH_PASS')]) {
                     sh '''
-                        echo "$DH_PASS" | podman login docker.io -u "$DH_USER" --password-stdin
-                        podman tag ci-nginx-demo:latest docker.io/$DH_USER/ci-nginx-demo:latest
-                        podman push docker.io/$DH_USER/ci-nginx-demo:latest
+                    echo "$DH_PASS" | podman login docker.io -u "$DH_USER" --password-stdin
+                    podman tag ci-nginx-demo:${BUILD_NUMBER} docker.io/$DH_USER/ci-nginx-demo:${BUILD_NUMBER}
+                    podman push docker.io/$DH_USER/ci-nginx-demo:${BUILD_NUMBER}
                     '''
                 }
             }
@@ -46,20 +48,17 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 sh '''
-                    kubectl --server=$K8S_SERVER \
-                    --token=$K8S_TOKEN \
-                    --insecure-skip-tls-verify \
-                    apply -f /home/jenkins-agent/ci-nginx-demo/nginx-deployment.yaml -n ci-demo
+                sed -i "s|IMAGE_TAG|${BUILD_NUMBER}|g" nginx-deployment.yaml
 
-                    kubectl --server=$K8S_SERVER \
-                    --token=$K8S_TOKEN \
-                    --insecure-skip-tls-verify \
-                    apply -f /home/jenkins-agent/ci-nginx-demo/nginx-service.yaml -n ci-demo
+                kubectl --server=$K8S_SERVER \
+                --token=$K8S_TOKEN \
+                --insecure-skip-tls-verify \
+                apply -f nginx-deployment.yaml -n ci-demo
 
-                    kubectl --server=$K8S_SERVER \
-                    --token=$K8S_TOKEN \
-                    --insecure-skip-tls-verify \
-                    rollout restart deployment ci-nginx-demo -n ci-demo
+                kubectl --server=$K8S_SERVER \
+                --token=$K8S_TOKEN \
+                --insecure-skip-tls-verify \
+                apply -f nginx-service.yaml -n ci-demo
                 '''
             }
         }
