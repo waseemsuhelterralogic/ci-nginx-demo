@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ci-nginx-demo
+  namespace: ci-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ci-nginx-demo
+  template:
+    metadata:
+      labels:
+        app: ci-nginx-demo
+    spec:
+      containers:
+      - name: ci-nginx-demo
+        image: docker.io/waseemsuhelterralogic/ci-nginx-demo:1.0
+        ports:
+        - containerPort: 80
+
